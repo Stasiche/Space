@@ -1,15 +1,20 @@
 from vector2d import Vector2d
 from particle import Particle
 
+import numpy as np
+
 import forces
 import constants
+
 
 class BHtree:
     def __init__(self, root):
         self.root = root
         self.external_nodes_num = None
+        self.save_particles = 0
 
     def insert_particle(self, particle, node):
+        particle.color = (1, 1, 1)
         if len(node.particles) == 0:
             node.add_particle(particle)
 
@@ -57,15 +62,24 @@ class BHtree:
         cm = node.get_cm()
         if (node.type == 1) and (abs(x1-x0)/(abs(particle.r - cm) + constants.epsilon) < constants.theta):
             # print(particle.name, node.name)
-            print(particle.name,  node.name, node.depth, len(node.particles))
+            # print(particle.name,  node.name, node.depth, len(node.particles))
             tmp_f = forces.base_force(particle, Particle(r=cm, mass=node.mass, name='aprox'))
-            if particle.name == 9:
-                tmp_brute_f = Vector2d()
-                for particle_brute in node.particles:
-                    tmp_brute_f += forces.base_force(particle, particle_brute)
 
-                len_error = (abs(tmp_f) - abs(tmp_brute_f)) / (abs(tmp_brute_f) + constants.epsilon)
-                print(len_error, '|', tmp_f, '|', abs(tmp_f), '|', tmp_brute_f, '|', abs(tmp_brute_f))
+            a = 0.1
+            b = 0.8
+            tmp_color = ((b-a)*np.random.random() + a, (b-a)*np.random.random() + a, (b-a)*np.random.random() + a)
+
+            self.save_particles += len(node.particles) - 1
+            for particle_color in node.particles:
+                particle_color.color = tmp_color
+
+            # if particle.name == 9:
+            #     tmp_brute_f = Vector2d()
+            #     for particle_brute in node.particles:
+            #         tmp_brute_f += forces.base_force(particle, particle_brute)
+            #
+            #     len_error = (abs(tmp_f) - abs(tmp_brute_f)) / (abs(tmp_brute_f) + constants.epsilon)
+                # print(len_error, '|', tmp_f, '|', abs(tmp_f), '|', tmp_brute_f, '|', abs(tmp_brute_f))
             force += tmp_f
             # force += forces.gravity(particle, Particle(r=cm, mass=node.mass))
 

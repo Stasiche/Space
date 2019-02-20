@@ -7,12 +7,16 @@ G = 1
 
 epsilon = 1e-7
 
-theta = 0.3
+theta = 0.5
 
 box_size = 1e2
 npar = int(9)
-dt = 1e-6
-steps_number = int(1e1)
+k = 5    # количество рядов до середины
+l = 5     # количество в крайнем ряду
+
+dt = 1e-8
+
+steps_number = int(1e6)
 
 method = 'bh+brue'
 # method = 'bh'

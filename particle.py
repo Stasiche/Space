@@ -8,6 +8,7 @@ class Particle:
         self.name = name
         self.mass = mass
         self.force = Vector2d(0, 0)
+        self.color = (1, 1, 1)
 
     def add_r(self, other):
         self.r += other.r

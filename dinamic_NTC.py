@@ -7,6 +7,7 @@ import random
 import math
 import forces
 import constants
+import os
 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -85,55 +86,73 @@ npar = constants.npar
 flag = True
 list_cos_error = []
 list_len_error = []
-for num_realization in range(constants.realization_num):
-    if flag:
-        particles = make_hex(10, 10)
-        # particles = make_univer(npar)
-        # particles, h = make_net(npar)
-    else:
-        # Шестиугольник
-        # particles = []
-        # for i in range(3):
-        #     for j in range(i+3):
-        #         particles.append(
-        #             Particle(r=Vector2d(constants.a * i * math.sqrt(3)/2,
-        #                                 constants.a * j - constants.a * 0.5 * i),
-        #                      v=Vector2d(), name=len(particles)))
-        # for i in range(3, 5):
-        #     for j in range(7-i):
-        #         particles.append(Particle(r=Vector2d(constants.a * i * math.sqrt(3)/2,
-        #                                              constants.a * j + constants.a * 0.5 * (i-4)),
-        #                                   v=Vector2d(), name=len(particles)))
-        ###################################
 
-        particles = []
-        k = 10              # количество рядов до середины
-        l = 10               # количество в крайнем ряду
-        for i in range(k):
-            for j in range(i + l):
-                particles.append(
-                    Particle(r=Vector2d(constants.a * i * math.sqrt(3) / 2,
-                                        constants.a * j - constants.a * 0.5 * i),
-                             v=Vector2d(), name=len(particles)))
-        for i in range(k, 2*k - 1):
-            for j in range(l+k - 2 - (i - k)):
-                particles.append(Particle(r=Vector2d(constants.a * i * math.sqrt(3) / 2,
-                                                     constants.a * j + constants.a * 0.5 * (i - 2*k + 2)),
-                                          v=Vector2d(), name=len(particles)))
-    # fig, (ax1, ax2) = plt.subplots(
-    #     nrows=1, ncols=2,
-    #     figsize=(8, 4)
-    # )
-    #
-    fig, ax1 = plt.subplots(figsize=(4, 4))
-    x = [particle.r.x for particle in particles]
-    y = [particle.r.y for particle in particles]
-    ax1.scatter(x=x, y=y, marker='o', c='r', edgecolor='b')
-    ax1.set_title('Scatter: $x$ versus $y$')
-    ax1.set_xlabel('$x$')
-    ax1.set_ylabel('$y$')
+if flag:
+    particles = make_hex(constants.k, constants.l)
+    # particles = make_univer(npar)
+    # particles, h = make_net(npar)
+else:
+    # Шестиугольник
+    # particles = []
+    # for i in range(3):
+    #     for j in range(i+3):
+    #         particles.append(
+    #             Particle(r=Vector2d(constants.a * i * math.sqrt(3)/2,
+    #                                 constants.a * j - constants.a * 0.5 * i),
+    #                      v=Vector2d(), name=len(particles)))
+    # for i in range(3, 5):
+    #     for j in range(7-i):
+    #         particles.append(Particle(r=Vector2d(constants.a * i * math.sqrt(3)/2,
+    #                                              constants.a * j + constants.a * 0.5 * (i-4)),
+    #                                   v=Vector2d(), name=len(particles)))
+    ###################################
 
-    plt.show()
+    particles = []
+    k = 10              # количество рядов до середины
+    l = 10               # количество в крайнем ряду
+    for i in range(k):
+        for j in range(i + l):
+            particles.append(
+                Particle(r=Vector2d(constants.a * i * math.sqrt(3) / 2,
+                                    constants.a * j - constants.a * 0.5 * i),
+                         v=Vector2d(), name=len(particles)))
+    for i in range(k, 2*k - 1):
+        for j in range(l+k - 2 - (i - k)):
+            particles.append(Particle(r=Vector2d(constants.a * i * math.sqrt(3) / 2,
+                                                 constants.a * j + constants.a * 0.5 * (i - 2*k + 2)),
+                                      v=Vector2d(), name=len(particles)))
+
+fig, ax1 = plt.subplots(figsize=(4, 4))
+x = [particle.r.x for particle in particles]
+y = [particle.r.y for particle in particles]
+ax1.scatter(x=x, y=y, marker='o', c='r', edgecolor='b')
+ax1.set_title('Scatter: $x$ versus $y$')
+ax1.set_xlabel('$x$')
+ax1.set_ylabel('$y$')
+plt.show()
+
+for step in range(constants.steps_number):
+    print(step)
+
+    save_path = os.path.dirname(os.path.realpath(__file__)) + '/bh_new'
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    with open(save_path + '/results_' + str(step) + '.xyz', 'w') as outfile:
+        outfile.write(str(len(particles)) + '\n\n')
+        for i, particle in enumerate(particles):
+            outfile.write(str(particle.r) + ' ' +
+                          str(particle.color[0]) + ' ' +
+                          str(particle.color[1]) + ' ' +
+                          str(particle.color[2]) + ' ' + '\n')
+
+    # fig, ax1 = plt.subplots(figsize=(4, 4))
+    # x = [particle.r.x for particle in particles]
+    # y = [particle.r.y for particle in particles]
+    # ax1.scatter(x=x, y=y, marker='o', c='r', edgecolor='b')
+    # ax1.set_title('Scatter: $x$ versus $y$')
+    # ax1.set_xlabel('$x$')
+    # ax1.set_ylabel('$y$')
+    # plt.show()
 
     mean_error = 0
     n1 = Node([-box_size / 2, -box_size / 2, box_size / 2, box_size / 2], node_type=2)
@@ -144,43 +163,28 @@ for num_realization in range(constants.realization_num):
 
     for i, particle in enumerate(particles):
         bh_force = bh.calculate_force(particle, bh.root)
-        # particle.force = bh_force
 
-        brute_force = Vector2d(0, 0)
-        for particle2 in particles:
-            if particle != particle2:
-                brute_force += forces.base_force(particle, particle2)
-                # brute_force += forces.gravity(particle, particle2)
+        # brute_force = Vector2d(0, 0)
+        # for particle2 in particles:
+        #     if particle != particle2:
+        #         brute_force += forces.base_force(particle, particle2)
+        #
+        # bh_force_abs = abs(bh_force)
+        # brute_force_abs = abs(brute_force)
+        #
+        # cos_error = bh_force.dot(brute_force) / (bh_force_abs * brute_force_abs + constants.epsilon)
+        # len_error = (bh_force_abs - brute_force_abs) / (brute_force_abs + constants.epsilon)
+
+        # print(i)
+        # print(bh_force.x/brute_force.x, '|', bh_force.y/brute_force.y)
+        # print('____')
 
         particle.force = bh_force
+        # particle.force = brute_force
 
-        # print(bh_force, '\n', brute_force, '\n', abs(bh_force - brute_force), '\n', '______')
-        # print(abs(bh_force - brute_force))
-        bh_force_abs = abs(bh_force)
-        brute_force_abs = abs(brute_force)
+    print(bh.save_particles, bh.save_particles/(len(particles)*(len(particles) - 1)))
 
-        cos_error = bh_force.dot(brute_force) / (bh_force_abs * brute_force_abs + constants.epsilon)
-        len_error = (bh_force_abs - brute_force_abs) / (brute_force_abs + constants.epsilon)
-
-        list_cos_error.append(cos_error)
-        list_len_error.append(len_error)
-
-        print(i)
-        # print(cos_error, len_error)
-        # print(len_error, '|', bh_force, '|', brute_force)
-        print(bh_force.x/brute_force.x, '|', bh_force.y/brute_force.y)
-        print('____')
-        # print(abs(bh_force - brute_force))
-        mean_error += abs(bh_force - brute_force)
-    mean_error /= len(particles)
-    mean_errors.append(mean_error)
-    # if mean_error > 1:
-    #     flag = 0
-
-    # print(num_realization, 'mean error: ' + str(mean_error))
-    # print(num_realization, 'mean error: ' + str(mean_error))
-
-# print('cos', min(list_cos_error))
-print('len', min(list_len_error), max(list_len_error))
-# print('h', h)
+    for particle in particles:
+        particle.v += particle.force * constants.dt
+        particle.r += particle.v * constants.dt
 
