@@ -5,7 +5,7 @@ import numpy as np
 
 import forces
 import constants
-
+import mac
 
 class BHtree:
     def __init__(self, root):
@@ -56,14 +56,12 @@ class BHtree:
             #     len_error = (abs(tmp_f) - abs(tmp_brute_f)) / (abs(tmp_brute_f) + constants.epsilon)
             #     print(len_error, '|', tmp_f, '|', tmp_brute_f)
             force += tmp_f
-            # force += forces.gravity(particle, node.particles[0])
 
-        x0, y0, x1, y1 = node.rect
         cm = node.get_cm()
-        if (node.type == 1) and (abs(x1-x0)/(abs(particle.r - cm) + constants.epsilon) < constants.theta):
+        if (node.type == 1) and (mac.mac(particle, node)):
             # print(particle.name, node.name)
             # print(particle.name,  node.name, node.depth, len(node.particles))
-            tmp_f = forces.base_force(particle, Particle(r=cm, mass=node.mass, name='aprox'))
+            tmp_f = forces.base_force(particle, Particle(r=cm, v=node.get_mv(), mass=node.mass, name='aprox'))
 
             a = 0.1
             b = 0.8
@@ -73,17 +71,16 @@ class BHtree:
             for particle_color in node.particles:
                 particle_color.color = tmp_color
 
-            # if particle.name == 9:
-            #     tmp_brute_f = Vector2d()
-            #     for particle_brute in node.particles:
-            #         tmp_brute_f += forces.base_force(particle, particle_brute)
-            #
-            #     len_error = (abs(tmp_f) - abs(tmp_brute_f)) / (abs(tmp_brute_f) + constants.epsilon)
-                # print(len_error, '|', tmp_f, '|', abs(tmp_f), '|', tmp_brute_f, '|', abs(tmp_brute_f))
-            force += tmp_f
-            # force += forces.gravity(particle, Particle(r=cm, mass=node.mass))
+            if particle.name == constants.median:
+                tmp_brute_f = Vector2d()
+                for particle_brute in node.particles:
+                    tmp_brute_f += forces.base_force(particle, particle_brute)
 
-        if (node.type == 1) and (abs(x1-x0)/(abs(particle.r - cm) + constants.epsilon) >= constants.theta):
+                len_error = (abs(tmp_f) - abs(tmp_brute_f)) / (abs(tmp_brute_f) + constants.epsilon)
+                print(len_error, '|', tmp_f, '|', abs(tmp_f), '|', tmp_brute_f, '|', abs(tmp_brute_f))
+            force += tmp_f
+
+        if (node.type == 1) and not(mac.mac(particle, node)):
             for child in node.children:
                 force += self.calculate_force(particle, child)
 

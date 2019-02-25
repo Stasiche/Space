@@ -28,6 +28,7 @@ class Node:
 
         self.mass = None
         self.cm = None                  # non-normed!
+        self.mv = None                  # non-normed!
 
     def add_particle(self, particle):
         self.particles.append(particle)
@@ -44,8 +45,16 @@ class Node:
         else:
             self.cm += particle.r * particle.mass
 
+        if self.mv is None:
+            self.mv = particle.v
+        else:
+            self.mv += particle.v
+
     def get_cm(self):
         return self.cm * (1/self.mass)
+
+    def get_mv(self):
+        return self.mv * (1/len(self.particles))
 
     def check_particle_in_node(self, particle):
         x0, y0, x1, y1 = self.rect

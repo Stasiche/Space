@@ -7,9 +7,11 @@ import random
 import math
 import forces
 import constants
+import plotting
 import os
 
-import networkx as nx
+# import networkx as nx
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 
@@ -122,19 +124,28 @@ else:
                                                  constants.a * j + constants.a * 0.5 * (i - 2*k + 2)),
                                       v=Vector2d(), name=len(particles)))
 
-fig, ax1 = plt.subplots(figsize=(4, 4))
-x = [particle.r.x for particle in particles]
-y = [particle.r.y for particle in particles]
-ax1.scatter(x=x, y=y, marker='o', c='r', edgecolor='b')
-ax1.set_title('Scatter: $x$ versus $y$')
-ax1.set_xlabel('$x$')
-ax1.set_ylabel('$y$')
-plt.show()
+# fig, ax1 = plt.subplots(figsize=(4, 4))
+# x = [particle.r.x for particle in particles]
+# y = [particle.r.y for particle in particles]
+# ax1.scatter(x=x, y=y, marker='o', c='r', edgecolor='b')
+# ax1.set_title('Scatter: $x$ versus $y$')
+# ax1.set_xlabel('$x$')
+# ax1.set_ylabel('$y$')
+# plt.show()
+
+constants.median = len(particles) // 2
+
+# eps = 0.5
+# for i in range(-100, 11):
+#     if constants.a + i * eps != 0:
+#         f = forces.base_force(Particle(r=Vector2d(), name='l'),
+#                               Particle(r=Vector2d(constants.a + i * eps, 0), name='r'))
+#         print(np.round((constants.a + i * eps)/constants.a, 3), f)
 
 for step in range(constants.steps_number):
     print(step)
 
-    save_path = os.path.dirname(os.path.realpath(__file__)) + '/bh_new'
+    save_path = os.path.dirname(os.path.realpath(__file__)) + '/bh'
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     with open(save_path + '/results_' + str(step) + '.xyz', 'w') as outfile:
@@ -161,22 +172,26 @@ for step in range(constants.steps_number):
     for particle in particles:
         bh.insert_particle(particle, bh.root)
 
+    if step == 0:
+        plotting.plot_main(particles, bh)
+
     for i, particle in enumerate(particles):
+        if i == constants.median:
+            q = 1
         bh_force = bh.calculate_force(particle, bh.root)
 
-        # brute_force = Vector2d(0, 0)
-        # for particle2 in particles:
-        #     if particle != particle2:
-        #         brute_force += forces.base_force(particle, particle2)
-        #
+        brute_force = Vector2d(0, 0)
+        for particle2 in particles:
+            if particle != particle2:
+                brute_force += forces.base_force(particle, particle2)
+
         # bh_force_abs = abs(bh_force)
         # brute_force_abs = abs(brute_force)
         #
-        # cos_error = bh_force.dot(brute_force) / (bh_force_abs * brute_force_abs + constants.epsilon)
         # len_error = (bh_force_abs - brute_force_abs) / (brute_force_abs + constants.epsilon)
-
+        #
         # print(i)
-        # print(bh_force.x/brute_force.x, '|', bh_force.y/brute_force.y)
+        # print(bh_force.x/(brute_force.x + constants.epsilon), '|', bh_force.y/(brute_force.y + constants.epsilon))
         # print('____')
 
         particle.force = bh_force
