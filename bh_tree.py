@@ -7,6 +7,7 @@ import forces
 import constants
 import mac
 
+
 class BHtree:
     def __init__(self, root):
         self.root = root
@@ -48,7 +49,7 @@ class BHtree:
         if (node.type == 2) and (node.particles[0] != particle):
             tmp_f = forces.base_force(particle, node.particles[0])
             # print(particle.name, node.name, node.depth, len(node.particles))
-            # if particle.name == 9:
+            # if particle.name == constants.median:
             #     tmp_brute_f = Vector2d()
             #     for particle_brute in node.particles:
             #         tmp_brute_f += forces.base_force(particle, particle_brute)

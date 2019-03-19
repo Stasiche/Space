@@ -21,13 +21,7 @@ def plot_nodes(axes, node):
 def plot_particles(axes, particles):
     x = [particle.r.x for particle in particles]
     y = [particle.r.y for particle in particles]
-    # axes.scatter(x=x, y=y, marker='o', c='r', edgecolor='b')
-    # axes.set_title('Scatter: $x$ versus $y$')
-    # axes.set_xlabel('$x$')
-    # axes.set_ylabel('$y$')
-
-    # pylab.scatter(x, y, c=color, s=size, alpha=alpha, edgecolors='none')
-    pylab.scatter(x, y, s=constants.a / 4)
+    pylab.scatter(x, y, s=0.8)
 
 
 def plot_main(particles, bh_tree):

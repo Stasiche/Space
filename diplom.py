@@ -81,6 +81,48 @@ def make_hex(k=10, l=10):
     return particles
 
 
+def make_hex_2(r, center):
+    particles = [Particle(r=center, v=Vector2d(), name=0)]
+
+    for i in range(r):
+        tmp_par = []
+        for angle in [j * math.pi / 3 for j in range(6)]:
+            tmp_par.append(Particle(r=center + Vector2d((i+1)*constants.a * math.sin(angle), (i+1)*constants.a * math.cos(angle)),
+                         v=Vector2d(), name=len(particles)))
+
+        for j, particle in enumerate(tmp_par[:-1]):
+            particles.append(particle)
+
+            # fig, ax1 = plt.subplots(figsize=(4, 4))
+            # x = [particle.r.x for particle in particles]
+            # y = [particle.r.y for particle in particles]
+            # ax1.scatter(x=x, y=y, marker='o', c='r', edgecolor='b')
+            # ax1.set_title('Scatter: $x$ versus $y$')
+            # ax1.set_xlabel('$x$')
+            # ax1.set_ylabel('$y$')
+            # plt.show()
+
+            e_tmp = particle.r - tmp_par[j+1].r
+            e_tmp = e_tmp * (1/abs(e_tmp))
+            for k in range(i):
+                particles.append(Particle(r=particle.r - e_tmp * constants.a, v=Vector2d(), name=len(particles)))
+
+                # fig, ax1 = plt.subplots(figsize=(4, 4))
+                # x = [particle.r.x for particle in particles]
+                # y = [particle.r.y for particle in particles]
+                # ax1.scatter(x=x, y=y, marker='o', c='r', edgecolor='b')
+                # ax1.set_title('Scatter: $x$ versus $y$')
+                # ax1.set_xlabel('$x$')
+                # ax1.set_ylabel('$y$')
+                # plt.show()
+
+        particles.append(tmp_par[-1])
+        e_tmp = tmp_par[-1].r - tmp_par[0].r
+        e_tmp = e_tmp * (1 / abs(e_tmp))
+        for k in range(i):
+            particles.append(Particle(r=particle.r - e_tmp * constants.a, v=Vector2d(), name=len(particles)))
+    return particles
+
 mean_errors = []
 box_size = constants.box_size
 npar = constants.npar
@@ -89,40 +131,8 @@ flag = True
 list_cos_error = []
 list_len_error = []
 
-if flag:
-    particles = make_hex(constants.k, constants.l)
-    # particles = make_univer(npar)
-    # particles, h = make_net(npar)
-else:
-    # Шестиугольник
-    # particles = []
-    # for i in range(3):
-    #     for j in range(i+3):
-    #         particles.append(
-    #             Particle(r=Vector2d(constants.a * i * math.sqrt(3)/2,
-    #                                 constants.a * j - constants.a * 0.5 * i),
-    #                      v=Vector2d(), name=len(particles)))
-    # for i in range(3, 5):
-    #     for j in range(7-i):
-    #         particles.append(Particle(r=Vector2d(constants.a * i * math.sqrt(3)/2,
-    #                                              constants.a * j + constants.a * 0.5 * (i-4)),
-    #                                   v=Vector2d(), name=len(particles)))
-    ###################################
-
-    particles = []
-    k = 10              # количество рядов до середины
-    l = 10               # количество в крайнем ряду
-    for i in range(k):
-        for j in range(i + l):
-            particles.append(
-                Particle(r=Vector2d(constants.a * i * math.sqrt(3) / 2,
-                                    constants.a * j - constants.a * 0.5 * i),
-                         v=Vector2d(), name=len(particles)))
-    for i in range(k, 2*k - 1):
-        for j in range(l+k - 2 - (i - k)):
-            particles.append(Particle(r=Vector2d(constants.a * i * math.sqrt(3) / 2,
-                                                 constants.a * j + constants.a * 0.5 * (i - 2*k + 2)),
-                                      v=Vector2d(), name=len(particles)))
+# particles = make_hex(constants.k, constants.l)
+particles = make_hex_2(3, Vector2d())
 
 fig, ax1 = plt.subplots(figsize=(4, 4))
 x = [particle.r.x for particle in particles]
@@ -145,7 +155,7 @@ constants.median = len(particles) // 2
 for step in range(constants.steps_number):
     print(step)
 
-    save_path = os.path.dirname(os.path.realpath(__file__)) + '/test_mass'
+    save_path = os.path.dirname(os.path.realpath(__file__)) + '/test'
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     with open(save_path + '/results_' + str(step) + '.xyz', 'w') as outfile:

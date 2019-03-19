@@ -6,7 +6,7 @@ alpha = 0.001
 
 G = 1
 
-epsilon = 1e-7
+epsilon = 1e-10
 
 theta = 0.3
 
