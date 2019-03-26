@@ -4,6 +4,7 @@ from vector2d import Vector2d
 from bh_tree import BHtree
 from profiler import Profiler
 import random
+import io_xyz
 import math
 import forces
 import constants
@@ -131,8 +132,8 @@ flag = True
 list_cos_error = []
 list_len_error = []
 
-# particles = make_hex(constants.k, constants.l)
-particles = make_hex_2(3, Vector2d())
+particles = make_hex(constants.k, constants.l)
+# particles = make_hex_2(3, Vector2d())
 
 fig, ax1 = plt.subplots(figsize=(4, 4))
 x = [particle.r.x for particle in particles]
@@ -175,48 +176,49 @@ for step in range(constants.steps_number):
     # ax1.set_ylabel('$y$')
     # plt.show()
 
-    mean_error = 0
-    n1 = Node([-box_size / 2, -box_size / 2, box_size / 2, box_size / 2], node_type=2)
-    bh = BHtree(n1)
-
-    for particle in particles:
-        bh.insert_particle(particle, bh.root)
-
-    if step == 0:
-        plotting.plot_main(particles, bh)
+    # mean_error = 0
+    # n1 = Node([-box_size / 2, -box_size / 2, box_size / 2, box_size / 2], node_type=2)
+    # bh = BHtree(n1)
+    #
+    # for particle in particles:
+    #     bh.insert_particle(particle, bh.root)
+    #
+    # if step == 0:
+    #     plotting.plot_main(particles, bh)
 
     for i, particle in enumerate(particles):
-        if i == constants.median:
-            q = 1
-        bh_force = bh.calculate_force(particle, bh.root)
+        # if i == constants.median:
+        #     q = 1
+        # bh_force = bh.calculate_force(particle, bh.root)
 
         brute_force = Vector2d(0, 0)
         for particle2 in particles:
             if particle != particle2:
                 brute_force += forces.base_force(particle, particle2)
 
-        bh_force_abs = abs(bh_force)
-        brute_force_abs = abs(brute_force)
-
-        len_error = (bh_force_abs - brute_force_abs) / (brute_force_abs + constants.epsilon)
-
-        # print(bh_force, '|', brute_force)
-        tmp1 = bh_force.x/(brute_force.x + constants.epsilon)
-        tmp2 = bh_force.y/(brute_force.y + constants.epsilon)
-        eps = 1e-5
-        if ((abs(tmp1-1) > 0.1) or (abs(tmp2-1) > 0.1)) \
-                and not((abs(bh_force.x) < eps) or (abs(bh_force.y) < eps) or (abs(brute_force.x) < eps) or (abs(brute_force.x) < eps)):
-            print(i)
-            print(bh_force, '|', brute_force)
-            print(bh_force.x/(brute_force.x + constants.epsilon), '|', bh_force.y/(brute_force.y + constants.epsilon))
-            print('____')
+        # bh_force_abs = abs(bh_force)
+        # brute_force_abs = abs(brute_force)
+        #
+        # len_error = (bh_force_abs - brute_force_abs) / (brute_force_abs + constants.epsilon)
+        #
+        # # print(bh_force, '|', brute_force)
+        # tmp1 = bh_force.x/(brute_force.x + constants.epsilon)
+        # tmp2 = bh_force.y/(brute_force.y + constants.epsilon)
+        # eps = 1e-5
+        # if ((abs(tmp1-1) > 0.1) or (abs(tmp2-1) > 0.1)) \
+        #         and not((abs(bh_force.x) < eps) or (abs(bh_force.y) < eps) or (abs(brute_force.x) < eps) or (abs(brute_force.x) < eps)):
+        #     print(i)
+        #     print(bh_force, '|', brute_force)
+        #     print(bh_force.x/(brute_force.x + constants.epsilon), '|', bh_force.y/(brute_force.y + constants.epsilon))
+        #     print('____')
 
         # particle.force = bh_force
         particle.force = brute_force
 
-    print(bh.save_particles, bh.save_particles/(len(particles)*(len(particles) - 1)))
+    # print(bh.save_particles, bh.save_particles/(len(particles)*(len(particles) - 1)))
 
     for particle in particles:
         particle.v += particle.force * constants.dt
         particle.r += particle.v * constants.dt
+        particle.v = Vector2d()
 

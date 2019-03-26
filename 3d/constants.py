@@ -1,5 +1,5 @@
 gamma = 0.01
-a = 0.01
+a = 1
 beta = 1
 D = 1
 alpha = 0.001
