@@ -18,7 +18,7 @@ npar = int(9)
 
 dt = 1e-5
 
-steps_number = int(1e5)
+steps_number = int(1e1)
 
 method = 'bh+brue'
 # method = 'bh'

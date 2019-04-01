@@ -91,15 +91,15 @@ def create_sphere(radii, num_sumples=2000):
 
         v = np.arccos(cosv)
 
-        # mul = tmp_z**(1/3)
-        # r1 = radii[0]*mul
-        # r2 = radii[1]*mul
-        # r3 = radii[2]*mul
-
-        mul = tmp_z**(1/2)
+        mul = tmp_z**(1/3)
         r1 = radii[0]*mul
         r2 = radii[1]*mul
         r3 = radii[2]*mul
+
+        # mul = tmp_z**(1/2)
+        # r1 = radii[0]*mul
+        # r2 = radii[1]*mul
+        # r3 = radii[2]*mul
 
 
         # lam = 0.1
@@ -134,27 +134,37 @@ def create_sphere(radii, num_sumples=2000):
     return particles
 
 
-def get_and_plot_density(particles, radii):
+def get_and_plot_density(particles, radii, rotation, center, num=100):
     cm = Vector3d()
     particles_ = copy.deepcopy(particles)
+
+    derotation = np.linalg.inv(rotation)
+
+    for particle in particles_:
+        particle.r.x -= center[0]
+        particle.r.y -= center[1]
+        particle.r.z -= center[2]
+
+        tmp = np.dot(np.array([particle.r.x, particle.r.y, particle.r.z]), derotation)
+        particle.r = Vector3d(tmp[0], tmp[1], tmp[2])
+
+        cm += particle.r
+    cm = cm * (1/len(particles_))
+
     for i in range(len(particles)):
         particles_[i].r.x *= 1/radii[0]
         particles_[i].r.y *= 1/radii[1]
         particles_[i].r.z *= 1/radii[2]
 
-    for particle in particles_:
-        cm += particle.r
-    cm = cm * (1/len(particles_))
-
-    lengths = sorted([abs(particle.r - cm) for particle in particles_])
+    lengths = sorted([abs(particle.r) for particle in particles_])
     density = []
     l = []
     # particles = sorted(particles, key=lambda particle: abs(particle.r - cm))
 
-    num = 100
     for i in range(len(lengths)//num):
-        density.append(num/(4/3*np.pi*(lengths[i*num + num-1]**3 - lengths[i*num]**3)))
-        l.append(lengths[i*num] + 0.5*(lengths[i*num + num-1] - lengths[i*num]))
+        density.append(num*particles_[0].mass/(4/3*np.pi*(lengths[i*num + num-1]**3 - lengths[i*num]**3)))
+        # l.append(lengths[i*num] + 0.5*(lengths[i*num + num-1] - lengths[i*num]))
+        l.append(lengths[i*num])
 
     ig, ax1 = plt.subplots(figsize=(4, 4))
 
@@ -167,11 +177,12 @@ def get_and_plot_density(particles, radii):
     return density, lengths
 
 
-def create_sphere2(radii, lengths, num_sumples=2000):
+def create_sphere2(radii, lengths, num_sumples=2000, mass=1):
     attempts = 100
-    particles = [Particle(r=Vector3d(), mass=10)]
+    # particles = [Particle(r=Vector3d(), mass=10)]
+    particles = []
     num = 100
-    for i in range(2, len(lengths) // num):
+    for i in range(0, len(lengths) // num):
         cur_num_particles = 0
         while True:
             u = np.random.uniform(0, 2*np.pi)
@@ -180,14 +191,16 @@ def create_sphere2(radii, lengths, num_sumples=2000):
             v = np.arccos(cosv)
 
             mul = tmp_z**(1/3)
-            r1 = (mul * lengths[i*num + num-1]) + (lengths[i*num + num-1] - lengths[i*num])
-            r2 = (mul * lengths[i*num + num-1]) + (lengths[i*num + num-1] - lengths[i*num])
-            r3 = (mul * lengths[i*num + num-1]) + (lengths[i*num + num-1] - lengths[i*num])
+            # mul = (mul * lengths[i*num + num-1]) + (lengths[i*num + num-1] - lengths[i*num])
+            mul = lengths[i*num] + mul*(lengths[i*num + num-1] - lengths[i*num])
+            r1 = radii[0]*mul
+            r2 = radii[1]*mul
+            r3 = radii[2]*mul
 
             tmp = [r1 * np.cos(u) * np.sin(v), r2 * np.sin(u) * np.sin(v), r3 * np.cos(v)]
             if criterion(tmp, particles):
                 [x, y, z] = [tmp[0], tmp[1], tmp[2]]
-                particles.append(Particle(r=Vector3d(x, y, z), color=(0, 0, 0), name=len(particles)))
+                particles.append(Particle(r=Vector3d(x, y, z), mass=mass))
 
                 cur_num_particles += 1
             if cur_num_particles % 1 == 0:
@@ -208,27 +221,27 @@ if not os.path.exists(save_path):
 particles = io_xyz.read(input_path, mode='Nick')
 
 print('Number of particles before: ', len(particles))
-# (center, radii, rotation) = getMinVolEllipse(
-#     np.array([[particle.r.x, particle.r.y, particle.r.z] for particle in particles], dtype='float32'))
-#
-# dens, lengths = get_and_plot_density(particles, radii)
-#
+(center, radii, rotation) = getMinVolEllipse(
+    np.array([[particle.r.x, particle.r.y, particle.r.z] for particle in particles], dtype='float32'))
+
+dens, lengths = get_and_plot_density(particles, radii, rotation, center)
+
 # particles = create_sphere(radii, 2000)
-# # particles = create_sphere2(radii, lengths, 200)
-#
-#
-# (center, radii, rotation) = getMinVolEllipse(
-#     np.array([[particle.r.x, particle.r.y, particle.r.z] for particle in particles], dtype='float32'))
-#
-# get_and_plot_density(particles, radii)
-#
+particles = create_sphere2(radii, lengths, 200, 10)
+
+
+(center, radii, rotation) = getMinVolEllipse(
+    np.array([[particle.r.x, particle.r.y, particle.r.z] for particle in particles], dtype='float32'))
+
+get_and_plot_density(particles, radii, rotation, center, 10)
+
 # particles = [Particle(r=Vector3d(0,0,0)),Particle(r=Vector3d(1.5*constants.a,0,0))]
 # criterion([particles[0].r.x, particles[0].r.y, particles[0].r.z],[particles[1]])
 
-# for i, p1 in enumerate(particles):
-#     for p2 in particles[i + 1:]:
-#         if abs(p1.r - p2.r) < 1*constants.a:
-#             print(abs(p1.r-p2.r))
+for i, p1 in enumerate(particles):
+    for p2 in particles[i + 1:]:
+        if abs(p1.r - p2.r) < 0.5*constants.a:
+            print(abs(p1.r-p2.r))
 
 print(len(particles))
 for step in range(constants.steps_number):

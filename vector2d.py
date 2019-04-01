@@ -1,4 +1,9 @@
 from math import sqrt
+import numpy as np
+
+
+def make_rotation_matrix(angle):
+    return np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
 
 
 class Vector2d:
@@ -12,6 +17,11 @@ class Vector2d:
 
     def dot(self, other):
         return self.x * other.x + self.y * other.y
+
+    def rotate(self, angle):
+        rot = make_rotation_matrix(angle)
+        tmp = np.dot(rot, [self.x, self.y])
+        return Vector2d(tmp[0], tmp[1])
 
     def __iadd__(self, other):
         return Vector2d(self.x + other.x, self.y + other.y)

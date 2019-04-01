@@ -19,5 +19,5 @@ def read(read_path):
         for el in s_tmp.split('\n')[2:]:
             if el != '':
                 rx, ry, cr, cg, cb = el.split()
-                particles.append(Particle(r=Vector2d(rx, ry), name=len(particles)))
+                particles.append(Particle(r=Vector2d(float(rx), float(ry)), name=len(particles)))
     return particles
