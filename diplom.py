@@ -135,6 +135,8 @@ list_len_error = []
 particles = make_hex(constants.k, constants.l)
 # particles = make_hex_2(3, Vector2d())
 
+print(len(particles))
+
 fig, ax1 = plt.subplots(figsize=(4, 4))
 x = [particle.r.x for particle in particles]
 y = [particle.r.y for particle in particles]
@@ -156,7 +158,7 @@ constants.median = len(particles) // 2
 for step in range(constants.steps_number):
     print(step)
 
-    save_path = os.path.dirname(os.path.realpath(__file__)) + '/test'
+    save_path = os.path.dirname(os.path.realpath(__file__)) + '/test2'
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     with open(save_path + '/results_' + str(step) + '.xyz', 'w') as outfile:
@@ -186,36 +188,17 @@ for step in range(constants.steps_number):
     # if step == 0:
     #     plotting.plot_main(particles, bh)
 
+    for particle in particles:
+        particle.force = Vector2d(0, 0)
+
     for i, particle in enumerate(particles):
-        # if i == constants.median:
-        #     q = 1
-        # bh_force = bh.calculate_force(particle, bh.root)
-
-        brute_force = Vector2d(0, 0)
-        for particle2 in particles:
+        for particle2 in particles[i+1:]:
             if particle != particle2:
-                brute_force += forces.base_force(particle, particle2)
+                brute_force = forces.base_force(particle, particle2)
 
-        # bh_force_abs = abs(bh_force)
-        # brute_force_abs = abs(brute_force)
-        #
-        # len_error = (bh_force_abs - brute_force_abs) / (brute_force_abs + constants.epsilon)
-        #
-        # # print(bh_force, '|', brute_force)
-        # tmp1 = bh_force.x/(brute_force.x + constants.epsilon)
-        # tmp2 = bh_force.y/(brute_force.y + constants.epsilon)
-        # eps = 1e-5
-        # if ((abs(tmp1-1) > 0.1) or (abs(tmp2-1) > 0.1)) \
-        #         and not((abs(bh_force.x) < eps) or (abs(bh_force.y) < eps) or (abs(brute_force.x) < eps) or (abs(brute_force.x) < eps)):
-        #     print(i)
-        #     print(bh_force, '|', brute_force)
-        #     print(bh_force.x/(brute_force.x + constants.epsilon), '|', bh_force.y/(brute_force.y + constants.epsilon))
-        #     print('____')
+                particle.force += brute_force
+                particle2.force += -brute_force
 
-        # particle.force = bh_force
-        particle.force = brute_force
-
-    # print(bh.save_particles, bh.save_particles/(len(particles)*(len(particles) - 1)))
 
     for particle in particles:
         particle.v += particle.force * constants.dt
