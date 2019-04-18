@@ -132,9 +132,10 @@ flag = True
 list_cos_error = []
 list_len_error = []
 
-particles = make_hex(constants.k, constants.l)
+# particles = make_hex(constants.k, constants.l)
 # particles = make_hex_2(3, Vector2d())
-
+start = 55
+particles = io_xyz.read('test3/results_' + str(start) + '.xyz')
 print(len(particles))
 
 fig, ax1 = plt.subplots(figsize=(4, 4))
@@ -155,12 +156,13 @@ constants.median = len(particles) // 2
 #                               Particle(r=Vector2d(constants.a + i * eps, 0), name='r'))
 #         print(np.round((constants.a + i * eps)/constants.a, 3), f)
 
-for step in range(constants.steps_number):
+save_path = os.path.dirname(os.path.realpath(__file__)) + '/test3'
+if not os.path.exists(save_path):
+    os.makedirs(save_path)
+
+for step in range(start, constants.steps_number):
     print(step)
 
-    save_path = os.path.dirname(os.path.realpath(__file__)) + '/test2'
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
     with open(save_path + '/results_' + str(step) + '.xyz', 'w') as outfile:
         outfile.write(str(len(particles)) + '\n\n')
         for i, particle in enumerate(particles):
@@ -199,9 +201,9 @@ for step in range(constants.steps_number):
                 particle.force += brute_force
                 particle2.force += -brute_force
 
-
+    dt = 1e-5
     for particle in particles:
-        particle.v += particle.force * constants.dt
-        particle.r += particle.v * constants.dt
+        particle.v += particle.force * dt
+        particle.r += particle.v * dt
         particle.v = Vector2d()
 

@@ -203,8 +203,8 @@ def create_sphere2(radii, lengths, num_sumples=2000, mass=1):
                 particles.append(Particle(r=Vector3d(x, y, z), mass=mass))
 
                 cur_num_particles += 1
-            if cur_num_particles % 1 == 0:
-                print(cur_num_particles)
+            # if cur_num_particles % 1 == 0:
+            #     print(cur_num_particles)
             if cur_num_particles == num//10:
                 break
     return particles
@@ -213,7 +213,7 @@ def create_sphere2(radii, lengths, num_sumples=2000, mass=1):
 
 input_path = '../3d/clust2.xyz'
 # input_path = '../3d/test/results_-999.xyz'
-save_path = os.path.dirname(os.path.realpath(__file__)) + '/test3'
+save_path = os.path.dirname(os.path.realpath(__file__)) + '/test_4'
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
@@ -226,8 +226,11 @@ print('Number of particles before: ', len(particles))
 
 dens, lengths = get_and_plot_density(particles, radii, rotation, center)
 
+# for i in range(len(radii)):
+    #!!!!!!!!!!!!!!
+    # radii[i] = radii[i] / 5
 # particles = create_sphere(radii, 2000)
-particles = create_sphere2(radii, lengths, 200, 10)
+particles = create_sphere2(radii, lengths, -100, 1)
 
 
 (center, radii, rotation) = getMinVolEllipse(
@@ -244,11 +247,69 @@ for i, p1 in enumerate(particles):
             print(abs(p1.r-p2.r))
 
 print(len(particles))
-for step in range(constants.steps_number):
+step = -1
+# for step in range(constants.steps_number):
+while True:
+    step += 1
     print('s :', step)
     io_xyz.write(particles, save_path, step)
+
+    for particle in particles:
+        particle.force = Vector3d()
+
     for i, p1 in enumerate(particles):
         for p2 in particles[i+1:]:
+            tmp_force = forces.base_force(p1, p2)
+            p1.force += tmp_force
+            p2.force += -tmp_force
+
+    flag_stop = True
+    flag_dic = True
+    eps = 1e-1
+    # eps = 1e2
+    k = 1
+    for particle in particles:
+        particle.v += particle.force * constants.dt * k
+        particle.r += particle.v * constants.dt * k
+
+        # print(abs(particle.v)/constants.dt, constants.dt * k)
+        if abs(particle.v)/constants.dt > 0.1:
+            flag_dic = False
+        if abs(particle.v)/constants.dt > eps:
+            flag_stop = False
+
+        particle.v = Vector3d()
+
+    if flag_dic:
+        k = 0.1
+
+    if flag_stop:
+        break
+
+omega = 1e-1
+while True:
+    step += 1
+    print('sv :', step)
+    io_xyz.write(particles, save_path, step)
+
+    for particle in particles:
+        R = np.sqrt(particle.r.y ** 2 + particle.r.z ** 2)
+        force = particle.mass * omega ** 2 * R
+        e = Vector3d()
+        e.x = 0
+        e.y = particle.r.y
+        e.z = particle.r.z
+        tmp_force = e * (1/abs(e)) * force
+
+        # rotate pi/2
+        tmp = tmp_force.y
+        tmp_force.y = tmp_force.z
+        tmp_force.z = -tmp
+
+        particle.force = tmp_force
+
+    for i, p1 in enumerate(particles):
+        for p2 in particles[i + 1:]:
             tmp_force = forces.base_force(p1, p2)
             p1.force += tmp_force
             p2.force += -tmp_force
@@ -257,3 +318,21 @@ for step in range(constants.steps_number):
         particle.v += particle.force * constants.dt
         particle.r += particle.v * constants.dt
 
+    # kill velocity cm
+    mean_vel = Vector3d()
+    for particle in particles:
+        mean_vel += particle.v
+    mean_vel = mean_vel * (1/len(particles))
+
+    for particle in particles:
+        particle.v -= mean_vel
+
+    flag_stop = True
+    for particle in particles:
+        R = np.sqrt(particle.r.y ** 2 + particle.r.z ** 2)
+        if abs(abs(particle.v * (1 / R)) - omega) > 0.01:
+            flag_stop = False
+            break
+
+    if flag_stop:
+        break

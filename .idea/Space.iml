@@ -5,6 +5,10 @@
       <excludeFolder url="file://$MODULE_DIR$/3d/test1" />
       <excludeFolder url="file://$MODULE_DIR$/3d/test2" />
       <excludeFolder url="file://$MODULE_DIR$/3d/test3" />
+      <excludeFolder url="file://$MODULE_DIR$/3d/test4" />
+      <excludeFolder url="file://$MODULE_DIR$/3d/test_20" />
+      <excludeFolder url="file://$MODULE_DIR$/3d/test_200" />
+      <excludeFolder url="file://$MODULE_DIR$/3d/test_4" />
       <excludeFolder url="file://$MODULE_DIR$/bh" />
       <excludeFolder url="file://$MODULE_DIR$/bh2" />
       <excludeFolder url="file://$MODULE_DIR$/bh_2_8x8" />
@@ -15,10 +19,13 @@
       <excludeFolder url="file://$MODULE_DIR$/bh_results" />
       <excludeFolder url="file://$MODULE_DIR$/brute" />
       <excludeFolder url="file://$MODULE_DIR$/brute_mass" />
+      <excludeFolder url="file://$MODULE_DIR$/fast" />
+      <excludeFolder url="file://$MODULE_DIR$/fast2" />
       <excludeFolder url="file://$MODULE_DIR$/movies" />
       <excludeFolder url="file://$MODULE_DIR$/results" />
       <excludeFolder url="file://$MODULE_DIR$/test" />
       <excludeFolder url="file://$MODULE_DIR$/test2" />
+      <excludeFolder url="file://$MODULE_DIR$/test3" />
       <excludeFolder url="file://$MODULE_DIR$/test_mass" />
       <excludeFolder url="file://$MODULE_DIR$/test_velocity" />
     </content>

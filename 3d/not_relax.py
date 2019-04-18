@@ -1,25 +1,23 @@
-from node import Node
+import matplotlib.pyplot as plt
+from vector3d import Vector3d
 from particle import Particle
-from vector2d import Vector2d
-from bh_tree import BHtree
-from profiler import Profiler
-import random
+import numpy as np
 import io_xyz
-import math
 import forces
 import constants
-import plotting
+import random
 import copy
 import os
 
-# import networkx as nx
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
 
-
-def make_rotation_matrix(angle):
-    return np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+def criterion(tmp, particles):
+    tmp_particle = Particle(r=Vector3d(*tmp))
+    for particle in particles:
+        # print((tmp_particle.r - particle.r).dot(forces.base_force(tmp_particle, particle)))
+        # if (tmp_particle.r - particle.r).dot(forces.base_force(tmp_particle, particle)) > -0.3:
+        if abs(tmp_particle.r - particle.r) < 0.5*constants.a:
+            return False
+    return True
 
 
 def getMinVolEllipse(P=None, tolerance=0.01):
@@ -137,7 +135,7 @@ def create_sphere(radii, num_sumples=2000):
 
 
 def get_and_plot_density(particles, radii, rotation, center, num=100):
-    cm = Vector2d()
+    cm = Vector3d()
     particles_ = copy.deepcopy(particles)
 
     derotation = np.linalg.inv(rotation)
@@ -145,9 +143,10 @@ def get_and_plot_density(particles, radii, rotation, center, num=100):
     for particle in particles_:
         particle.r.x -= center[0]
         particle.r.y -= center[1]
+        particle.r.z -= center[2]
 
-        tmp = np.dot(np.array([particle.r.x, particle.r.y]), derotation)
-        particle.r = Vector2d(tmp[0], tmp[1])
+        tmp = np.dot(np.array([particle.r.x, particle.r.y, particle.r.z]), derotation)
+        particle.r = Vector3d(tmp[0], tmp[1], tmp[2])
 
         cm += particle.r
     cm = cm * (1/len(particles_))
@@ -155,6 +154,7 @@ def get_and_plot_density(particles, radii, rotation, center, num=100):
     for i in range(len(particles)):
         particles_[i].r.x *= 1/radii[0]
         particles_[i].r.y *= 1/radii[1]
+        particles_[i].r.z *= 1/radii[2]
 
     lengths = sorted([abs(particle.r) for particle in particles_])
     density = []
@@ -162,7 +162,7 @@ def get_and_plot_density(particles, radii, rotation, center, num=100):
     # particles = sorted(particles, key=lambda particle: abs(particle.r - cm))
 
     for i in range(len(lengths)//num):
-        density.append(num*particles_[0].mass/(np.pi*(lengths[i*num + num-1]**2 - lengths[i*num]**2)))
+        density.append(num*particles_[0].mass/(4/3*np.pi*(lengths[i*num + num-1]**3 - lengths[i*num]**3)))
         # l.append(lengths[i*num] + 0.5*(lengths[i*num + num-1] - lengths[i*num]))
         l.append(lengths[i*num])
 
@@ -177,16 +177,6 @@ def get_and_plot_density(particles, radii, rotation, center, num=100):
     return density, lengths
 
 
-def criterion(tmp, particles):
-    tmp_particle = Particle(r=Vector2d(*tmp))
-    for particle in particles:
-        # print((tmp_particle.r - particle.r).dot(forces.base_force(tmp_particle, particle)))
-        # if (tmp_particle.r - particle.r).dot(forces.base_force(tmp_particle, particle)) > -0.3:
-        if abs(tmp_particle.r - particle.r) < 1*constants.a:
-            return False
-    return True
-
-
 def create_sphere2(radii, lengths, num_sumples=2000, mass=1):
     attempts = 100
     # particles = [Particle(r=Vector3d(), mass=10)]
@@ -196,18 +186,21 @@ def create_sphere2(radii, lengths, num_sumples=2000, mass=1):
         cur_num_particles = 0
         while True:
             u = np.random.uniform(0, 2*np.pi)
+            cosv = np.random.uniform(-1, 1)
             tmp_z = np.random.uniform(0, 1)
+            v = np.arccos(cosv)
 
             mul = tmp_z**(1/3)
             # mul = (mul * lengths[i*num + num-1]) + (lengths[i*num + num-1] - lengths[i*num])
             mul = lengths[i*num] + mul*(lengths[i*num + num-1] - lengths[i*num])
             r1 = radii[0]*mul
             r2 = radii[1]*mul
+            r3 = radii[2]*mul
 
-            tmp = [r1 * np.cos(u), r2 * np.sin(u)]
+            tmp = [r1 * np.cos(u) * np.sin(v), r2 * np.sin(u) * np.sin(v), r3 * np.cos(v)]
             if criterion(tmp, particles):
-                [x, y] = [tmp[0], tmp[1]]
-                particles.append(Particle(r=Vector2d(x, y), mass=mass))
+                [x, y, z] = [tmp[0], tmp[1], tmp[2]]
+                particles.append(Particle(r=Vector3d(x, y, z), mass=mass))
 
                 cur_num_particles += 1
             # if cur_num_particles % 1 == 0:
@@ -217,108 +210,74 @@ def create_sphere2(radii, lengths, num_sumples=2000, mass=1):
     return particles
 
 
-# particles = io_xyz.read('../Space/test/results_22350.xyz')
-# particles = io_xyz.read('../Space/test/results_1.xyz')
-particles = io_xyz.read('../Space/test3/results_150.xyz')
-print(len(particles))
 
-(center, radii, rotation) = getMinVolEllipse(
-    np.array([[particle.r.x, particle.r.y] for particle in particles], dtype='float32'))
+input_path = '../3d/clust2.xyz'
+# input_path = '../3d/test/results_-999.xyz'
+save_path = os.path.dirname(os.path.realpath(__file__)) + '/test_4'
 
-dens, lengths = get_and_plot_density(particles, radii, rotation, center)
-
-particles = create_sphere2(radii, lengths, mass=1)
-print(len(particles))
-
-rot = make_rotation_matrix(np.pi/2)
-
-cm = Vector2d()
-for particle in particles:
-    cm += particle.r
-cm = cm * (1/len(particles))
-
-# delta = 100
-# for particle in particles:
-#     # particle.v = Vector2d(10 * np.random.sample(), 10 * np.random.sample())
-#     r = particle.r - cm
-#     r = np.dot(rot, [r.x, r.y])
-#     x = np.random.sample() * 2 * delta + (r[0] - delta)
-#     y = np.random.sample() * 2 * delta + (r[1] - delta)
-#     particle.v = Vector2d(x, y) * 1
-#####
-# for i, particle in enumerate(particles):
-#     brute_force = Vector2d(0, 0)
-#     for particle2 in particles:
-#         if particle != particle2:
-#             brute_force += forces.base_force(particle, particle2)
-#
-#     r = particle.r - cm
-#     r = np.dot(rot, [r.x, r.y])
-#     r = Vector2d(r[0], r[1])
-#     tmp_v = r * (1/abs(r)) * abs((r.dot(brute_force)/abs(r)))
-#     particle.v = tmp_v * 0.1
-########
-# Nice!
-for i, particle in enumerate(particles):
-    print(i)
-    brute_force = Vector2d(0, 0)
-    for particle2 in particles:
-        if particle != particle2:
-            brute_force += forces.base_force(particle, particle2)
-
-    r = particle.r - cm
-    r = np.dot(rot, [r.x, r.y])
-    r = Vector2d(r[0], r[1])
-    # tmp_v = r * (1/abs(r)) * np.sqrt(abs((r.dot(brute_force)))/particle.mass)
-    tmp_v = r * (1/abs(r)) * np.sqrt(abs(brute_force) * abs(r)/particle.mass)
-    angle_a = np.pi/24
-    angle_b = np.pi/12
-    # particle.v = tmp_v.rotate(np.random.sample() * 2 * angle - angle)
-    particle.v = tmp_v.rotate(np.random.sample() * angle_b + (angle_b - angle_a))
-########
-# for i, particle in enumerate(particles):
-#     brute_force = Vector2d(0, 0)
-#     for particle2 in particles:
-#         if particle != particle2:
-#             brute_force += forces.base_force(particle, particle2)
-#
-#     r = particle.r - cm
-#     tmp_v = r * (1/abs(r)) * abs((r.dot(brute_force)/abs(r)))
-#     particle.v = tmp_v * 0.1
-######
-
-
-tmp_v = Vector2d()
-for particle in particles:
-    tmp_v += particle.v
-tmp_v = tmp_v * (1/len(particles))
-
-for particle in particles:
-    particle.v -= tmp_v
-
-save_path = os.path.dirname(os.path.realpath(__file__)) + '/test_velocity'
 if not os.path.exists(save_path):
     os.makedirs(save_path)
 
+particles = io_xyz.read(input_path, mode='Nick')
+
+print('Number of particles before: ', len(particles))
+(center, radii, rotation) = getMinVolEllipse(
+    np.array([[particle.r.x, particle.r.y, particle.r.z] for particle in particles], dtype='float32'))
+
+dens, lengths = get_and_plot_density(particles, radii, rotation, center)
+
+# for i in range(len(radii)):
+    #!!!!!!!!!!!!!!
+    # radii[i] = radii[i] / 5
+# particles = create_sphere(radii, 2000)
+particles = create_sphere2(radii, lengths, -100, 1)
+
+
+(center, radii, rotation) = getMinVolEllipse(
+    np.array([[particle.r.x, particle.r.y, particle.r.z] for particle in particles], dtype='float32'))
+
+get_and_plot_density(particles, radii, rotation, center, 10)
+
+# particles = [Particle(r=Vector3d(0,0,0)),Particle(r=Vector3d(1.5*constants.a,0,0))]
+# criterion([particles[0].r.x, particles[0].r.y, particles[0].r.z],[particles[1]])
+
+for i, p1 in enumerate(particles):
+    for p2 in particles[i + 1:]:
+        if abs(p1.r - p2.r) < 0.5*constants.a:
+            print(abs(p1.r-p2.r))
+
+print(len(particles))
+omega = 5e-1
+for particle in particles:
+    R = np.sqrt(particle.r.y ** 2 + particle.r.z ** 2)
+    e = Vector3d()
+    e.x = 0
+    e.y = particle.r.y
+    e.z = particle.r.z
+    tmp_v = e * (1/abs(e)) * omega * R
+
+    # rotate pi/2
+    tmp = tmp_v.y
+    tmp_v.y = tmp_v.z
+    tmp_v.z = -tmp
+
+    particle.v = tmp_v
+
+
 for step in range(constants.steps_number):
-    print(step)
+    print('s :', step)
+    io_xyz.write(particles, save_path, step)
 
-    with open(save_path + '/results_' + str(step) + '.xyz', 'w') as outfile:
-        outfile.write(str(len(particles)) + '\n\n')
-        for i, particle in enumerate(particles):
-            outfile.write(str(particle.r) + ' ' +
-                          str(particle.v) + '\n')
+    for particle in particles:
+        particle.force = Vector3d()
 
-    for i, particle in enumerate(particles):
-        brute_force = Vector2d(0, 0)
-        for particle2 in particles:
-            if particle != particle2:
-                brute_force += forces.base_force(particle, particle2)
-
-        particle.force = brute_force
+    for i, p1 in enumerate(particles):
+        for p2 in particles[i+1:]:
+            tmp_force = forces.base_force(p1, p2)
+            p1.force += tmp_force
+            p2.force += -tmp_force
 
     for particle in particles:
         particle.v += particle.force * constants.dt
         particle.r += particle.v * constants.dt
-
 

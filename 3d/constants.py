@@ -16,9 +16,9 @@ l = 5     # количество в крайнем ряду
 box_size = a * k * 4
 npar = int(9)
 
-dt = 1e-5
+dt = 1e-2
 
-steps_number = int(1e1)
+steps_number = int(1e4)
 
 method = 'bh+brue'
 # method = 'bh'

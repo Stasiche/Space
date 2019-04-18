@@ -2,7 +2,7 @@ from vector2d import Vector2d
 
 
 class Particle:
-    def __init__(self, r, name, v=Vector2d(0, 0), mass=1):
+    def __init__(self, r, name='noname', v=Vector2d(0, 0), mass=1):
         self.r = r
         self.v = v
         self.name = name
