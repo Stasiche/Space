@@ -22,6 +22,9 @@
       <excludeFolder url="file://$MODULE_DIR$/fast" />
       <excludeFolder url="file://$MODULE_DIR$/fast2" />
       <excludeFolder url="file://$MODULE_DIR$/movies" />
+      <excludeFolder url="file://$MODULE_DIR$/new/3d/test_good" />
+      <excludeFolder url="file://$MODULE_DIR$/new/3d/test_good_2" />
+      <excludeFolder url="file://$MODULE_DIR$/new/3d/test_stock_detrans" />
       <excludeFolder url="file://$MODULE_DIR$/results" />
       <excludeFolder url="file://$MODULE_DIR$/test" />
       <excludeFolder url="file://$MODULE_DIR$/test2" />
