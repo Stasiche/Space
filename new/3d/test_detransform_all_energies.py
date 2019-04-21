@@ -206,6 +206,12 @@ if not os.path.exists(save_path):
 
 particles = io_xyz.read(input_path, mode='Nick')
 
+potential_energy = 0
+for i, particle1 in enumerate(particles):
+    for particle2 in particles[i+1:]:
+        potential_energy += forces.potential(particle1, particle2)
+print('p', potential_energy)
+
 print('Number of particles before: ', len(particles))
 
 (center, radii, rotation) = getMinVolEllipse(
@@ -275,29 +281,100 @@ mean_vel *= (1/len(particles))
 for particle in particles:
     particle.v -= mean_vel
 
+potential_energy_new = 0
+for i, particle1 in enumerate(particles):
+    for particle2 in particles[i+1:]:
+        potential_energy_new += forces.potential(particle1, particle2)
+print("pe", potential_energy - potential_energy_new, potential_energy / potential_energy_new)
+
+for i in range(1000):
+    for particle in particles:
+        particle.mass *= (potential_energy / potential_energy_new) ** (1/(i+1))
+
+    potential_energy_new = 0
+    for i, particle1 in enumerate(particles):
+        for particle2 in particles[i + 1:]:
+            potential_energy_new += forces.potential(particle1, particle2)
+    raz, ratio = potential_energy - potential_energy_new, potential_energy / potential_energy_new
+    # print("pe", raz, ratio)
+    if abs(1-ratio) <= constants.epsilon:
+        break
+
+potential_energy_new = 0
+for i, particle1 in enumerate(particles):
+    for particle2 in particles[i+1:]:
+        potential_energy_new += forces.potential(particle1, particle2)
+print("pe", potential_energy - potential_energy_new, potential_energy / potential_energy_new)
+
 kinetic_energy_new = 0
 for particle in particles:
     kinetic_energy_new += particle.mass * abs(particle.v)**2 / 2
-print(kinetic_energy - kinetic_energy_new)
+print("ke", kinetic_energy - kinetic_energy_new, kinetic_energy / kinetic_energy_new)
 
-# # проблемы с тем, что добавляя случайную скорость мы увеличиваем скорость
-# for i in range(1000):
-#     mul = 0.0001*(kinetic_energy - kinetic_energy_new)/(particles[0].mass * len(particles))
+# # проблемы с тем, что добавляя случайную скорость мы увеличиваем скорость - решение теорема косинусов
+# for i in range(100):
 #     # rand_vel_mag = np.sqrt(2 * abs(kinetic_energy - kinetic_energy_new) / particles[0].mass) * 1/len(particles)
+#     min_v = np.min([abs(particle.v) for particle in particles])
+#     rand_vel_mag = 0.001 * np.sign(kinetic_energy - kinetic_energy_new) * min_v
 #
+#     ave_v = np.mean([abs(particle.v) for particle in particles])
 #     for particle in particles:
-#         tmp_v_vec = Vector3d(np.random.sample(), np.random.sample(), np.random.sample())
-#         if kinetic_energy < kinetic_energy_new:
-#             particle.v -= particle.v * (1 / abs(particle.v)) * 1.01 * mul
-#         # particle.v += tmp_v_vec * mul * (1 / abs(tmp_v_vec)) * rand_vel_mag
-#         particle.v += tmp_v_vec * (1 / abs(tmp_v_vec)) * mul
+#         tmp_e = Vector3d(np.random.sample(), np.random.sample(), np.random.sample())
+#         tmp_e *= (1 / abs(tmp_e))
+#
+#         l = particle.v.dot(tmp_e)
+#         tmp_mag = -l + np.sqrt(l**2 - abs(particle.v)**2 + (abs(particle.v) + rand_vel_mag) ** 2)
+#         particle.v += tmp_e * tmp_mag
+#
+#     mean_vel = Vector3d()
+#     for particle in particles:
+#         mean_vel += particle.v
+#     mean_vel *= (1 / len(particles))
+#     for particle in particles:
+#         particle.v -= mean_vel
+#
+#     kinetic_energy_new = 0
 #     for particle in particles:
 #         kinetic_energy_new += particle.mass * abs(particle.v) ** 2 / 2
-#     print(kinetic_energy - kinetic_energy_new)
+#     print("k", kinetic_energy - kinetic_energy_new, kinetic_energy / kinetic_energy_new)
+#     if kinetic_energy / kinetic_energy_new < 1:
+#         break
 
+# версия 2
+for i in range(1000):
+    min_v = np.min([abs(particle.v) for particle in particles])
+    rand_vel_mag = 0.01 * min_v
+
+    for particle in particles:
+        tmp_e = Vector3d(np.random.sample(), np.random.sample(), 0)
+        tmp_e.z = (np.sign(kinetic_energy - kinetic_energy_new) - tmp_e.x*particle.v.x - tmp_e.y*particle.v.y)/particle.v.z
+        tmp_e *= (1 / abs(tmp_e))
+
+        particle.v += tmp_e * rand_vel_mag
+
+    mean_vel = Vector3d()
+    for particle in particles:
+        mean_vel += particle.v
+    mean_vel *= (1 / len(particles))
+    for particle in particles:
+        particle.v -= mean_vel
+
+    kinetic_energy_new = 0
+    for particle in particles:
+        kinetic_energy_new += particle.mass * abs(particle.v) ** 2 / 2
+    # print("k", kinetic_energy - kinetic_energy_new, kinetic_energy / kinetic_energy_new)
+    if abs(1-kinetic_energy / kinetic_energy_new) < constants.epsilon:
+        break
+
+kinetic_energy_new = 0
+for particle in particles:
+    kinetic_energy_new += particle.mass * abs(particle.v)**2 / 2
+print("ke", kinetic_energy - kinetic_energy_new, kinetic_energy / kinetic_energy_new)
+
+#####
 for step in range(constants.steps_number):
     print('s', step)
-    if step % 2 == 0:
+    if step % 10 == 0:
         io_xyz.write(particles, save_path, step)
 
     for particle in particles:
@@ -312,4 +389,4 @@ for step in range(constants.steps_number):
     for particle in particles:
         particle.v += particle.force * constants.dt
         particle.r += particle.v * constants.dt
-
+#
