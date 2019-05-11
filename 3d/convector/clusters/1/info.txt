@@ -1,0 +1,6 @@
+a 1.063459661306047
+m 2.5
+
+C:\Users\admin\PycharmProjects\Space\3d/a_900_2_wo_rv
+pe: 0.9907164164394466
+ke: 0.9131069037120264
