@@ -162,7 +162,7 @@ def get_and_plot_density(particles, radii):
     ax1.set_title('Scatter: $x$ versus $y$')
     ax1.set_xlabel('$x$')
     ax1.set_ylabel('$y$')
-    plt.show()
+    # plt.show()
 
     return density, lengths
 
@@ -208,27 +208,27 @@ if not os.path.exists(save_path):
 particles = io_xyz.read(input_path, mode='Nick')
 
 print('Number of particles before: ', len(particles))
-# (center, radii, rotation) = getMinVolEllipse(
-#     np.array([[particle.r.x, particle.r.y, particle.r.z] for particle in particles], dtype='float32'))
-#
-# dens, lengths = get_and_plot_density(particles, radii)
-#
-# particles = create_sphere(radii, 2000)
-# # particles = create_sphere2(radii, lengths, 200)
-#
-#
-# (center, radii, rotation) = getMinVolEllipse(
-#     np.array([[particle.r.x, particle.r.y, particle.r.z] for particle in particles], dtype='float32'))
-#
-# get_and_plot_density(particles, radii)
-#
-# particles = [Particle(r=Vector3d(0,0,0)),Particle(r=Vector3d(1.5*constants.a,0,0))]
-# criterion([particles[0].r.x, particles[0].r.y, particles[0].r.z],[particles[1]])
+(center, radii, rotation) = getMinVolEllipse(
+    np.array([[particle.r.x, particle.r.y, particle.r.z] for particle in particles], dtype='float32'))
 
-# for i, p1 in enumerate(particles):
-#     for p2 in particles[i + 1:]:
-#         if abs(p1.r - p2.r) < 1*constants.a:
-#             print(abs(p1.r-p2.r))
+dens, lengths = get_and_plot_density(particles, radii)
+
+particles = create_sphere(radii, 2000)
+# particles = create_sphere2(radii, lengths, 200)
+
+
+(center, radii, rotation) = getMinVolEllipse(
+    np.array([[particle.r.x, particle.r.y, particle.r.z] for particle in particles], dtype='float32'))
+
+get_and_plot_density(particles, radii)
+
+particles = [Particle(r=Vector3d(0,0,0)),Particle(r=Vector3d(1.5*constants.a,0,0))]
+criterion([particles[0].r.x, particles[0].r.y, particles[0].r.z],[particles[1]])
+
+for i, p1 in enumerate(particles):
+    for p2 in particles[i + 1:]:
+        if abs(p1.r - p2.r) < 1*constants.a:
+            print(abs(p1.r-p2.r))
 
 print(len(particles))
 for step in range(constants.steps_number):
